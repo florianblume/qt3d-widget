@@ -58,8 +58,9 @@ Qt3DWidget::~Qt3DWidget() {
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
-    renderer->setOpenGLContext(new QOpenGLContext);
-    ((Qt3DExtras::QForwardRenderer *) d->m_activeFrameGraph)->setSurface(new QOffscreenSurface);
+    renderer->setOpenGLContext(Q_NULLPTR);
+    renderer->initialize();
+    renderer->shutdown();
     d->m_activeFrameGraph->setParent((Qt3DCore::QNode *) 0);
     d->m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr());
     d->m_aspectEngine->unregisterAspect(d->m_renderAspect);
@@ -72,7 +73,6 @@ void Qt3DWidget::initializeGL() {
     Q_D(Qt3DWidget);
 
     QOffscreenSurface *surface = (QOffscreenSurface*) context()->surface();
-    //d->m_renderSurfaceSelector->setSurface(surface);
     ((Qt3DExtras::QForwardRenderer *) d->m_activeFrameGraph)->setSurface(surface);
 
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
@@ -84,11 +84,15 @@ void Qt3DWidget::initializeGL() {
     d->m_root->addComponent(d->m_renderSettings);
     d->m_root->addComponent(d->m_inputSettings);
     d->m_root->addComponent(d->m_frameAction);
-    connect(d->m_frameAction, &Qt3DLogic::QFrameAction::triggered,
-            this, &Qt3DWidget::paintGL);
+    //connect(d->m_frameAction, &Qt3DLogic::QFrameAction::triggered,
+    //        this, &Qt3DWidget::paintGL);
     d->m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr(d->m_root));
 
     d->m_initialized = true;
+
+    d->m_updateTimer.setInterval(20); // 50 fps
+    connect(&d->m_updateTimer, &QTimer::timeout, this, &Qt3DWidget::paintGL);
+    d->m_updateTimer.start();
 }
 
 void Qt3DWidget::paintGL() {

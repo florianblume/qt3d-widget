@@ -11,6 +11,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QResizeEvent>
+#include <QTimer>
 
 #include <Qt3DRender/private/qt3drender_global_p.h>
 #include <Qt3DCore/QAspectEngine>
@@ -66,6 +67,8 @@ public:
     // Scene
     Qt3DCore::QEntity *m_root;
     Qt3DCore::QEntity *m_userRoot;
+
+    QTimer m_updateTimer;
 
     bool m_initialized;
 };
