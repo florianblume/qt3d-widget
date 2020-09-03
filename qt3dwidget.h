@@ -20,7 +20,6 @@ public:
     explicit Qt3DWidget(QWidget *parent = nullptr);
     ~Qt3DWidget();
     void initializeGL() override;
-    void resizeGL(int w, int h) override;
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
@@ -34,6 +33,8 @@ public:
     Qt3DRender::QCamera *camera() const;
     Qt3DRender::QRenderSettings *renderSettings() const;
 
+    QSurface *surface() const;
+
 public Q_SLOTS:
     void paintGL() override;
 
@@ -41,14 +42,10 @@ Q_SIGNALS:
 
 protected:
     void showEvent(QShowEvent *e) override;
-    void resizeEvent(QResizeEvent *e) override;
     Qt3DWidgetPrivate *d_ptr;
 
 private:
     Q_DECLARE_PRIVATE(Qt3DWidget)
-
-private Q_SLOTS:
-    void imageCaptured();
 
 };
 
