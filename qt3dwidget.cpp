@@ -50,7 +50,7 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     d->m_inputSettings->setEventSource(this);
 
     d->m_activeFrameGraph = d->m_forwardRenderer;
-    d->m_forwardRenderer->setClearColor("green");
+    d->m_forwardRenderer->setClearColor("white");
 }
 
 Qt3DWidget::~Qt3DWidget() {
@@ -92,12 +92,25 @@ void Qt3DWidget::initializeGL() {
 
     d->m_updateTimer.setInterval(20); // 50 fps
     connect(&d->m_updateTimer, &QTimer::timeout, this, &Qt3DWidget::paintGL);
+    connect(&d->m_updateTimer, &QTimer::timeout, [d, this](){
+        Qt3DExtras::QForwardRenderer * test = (Qt3DExtras::QForwardRenderer *) d->m_activeFrameGraph;
+        QColor color = test->clearColor();
+        int red = color.red() + d->colorDirection;
+        int green = color.green() + d->colorDirection;
+        int blue = color.blue() + d->colorDirection;
+        test->setClearColor(QColor(red, green, blue));
+        if (red == 0) {
+            d->colorDirection = 1;
+        } else if (red == 255) {
+            d->colorDirection = -1;
+        }
+        update();
+    });
     d->m_updateTimer.start();
 }
 
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
-
     d->m_aspectEngine->processFrame();
 
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>

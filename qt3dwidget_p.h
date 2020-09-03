@@ -69,6 +69,7 @@ public:
     Qt3DCore::QEntity *m_userRoot;
 
     QTimer m_updateTimer;
+    int colorDirection = -1;
 
     bool m_initialized;
 };
