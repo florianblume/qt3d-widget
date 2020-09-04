@@ -15,3 +15,9 @@ _This version used a simple vertex and fragment shader. They have been removed i
 The current implementation drives Qt3D manually instead of letting Qt3D do the work. This means setting the run mode on the `QAspectEngine` to `MANUAL` and manually triggering `processFrame` on the aspect engine and `doRender` on the `QRenderAspect`. Because context sharing doesn't seem to work properly (maybe it does and I'm doing it wrong) we set the context of the OpenGL widget on Qt3D making them use the same context. This way, Qt3D is able to directly draw to the framebuffer object of the OpenGL widget. It still feels a bit hacky, especially because it uses Qt3D's private classes. The better solution would be to share the texture in my opinion. Nevertheless it works and the widget is embeddable in other applications and should provide all necessary functionality.
 
 **Warning:** The this version of the widget uses Qt internal classes because it needs to set the context on Qt3D. This means it might break in some versions and needs code apations.
+
+### Screenshot
+
+With `QPushButton` inside to show that it's now possible to add widgets inside Qt3D.
+
+![img](https://i.imgur.com/EaIWRiF.png)
