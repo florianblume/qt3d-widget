@@ -25,6 +25,8 @@ public:
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
 
+    void setUpdateFrequency(int milliseconds);
+
     void setRootEntity(Qt3DCore::QEntity *root);
 
     void setActiveFrameGraph(Qt3DRender::QFrameGraphNode *activeFrameGraph);

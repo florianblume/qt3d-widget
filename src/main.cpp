@@ -10,6 +10,7 @@
 #include <Qt3DExtras/QOrbitCameraController>
 
 int main(int argc, char *argv[]) {
+    // We need this, otherwise the application hangs
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication a(argc, argv);
     // The order of the following calls is important otherwise we won't see anything.
@@ -19,6 +20,7 @@ int main(int argc, char *argv[]) {
     widget->show();
     w.setCentralWidget(widget);
 
+    // Test scene
     Qt3DExtras::QTorusMesh *mesh = new Qt3DExtras::QTorusMesh();
     mesh->setRings(100);
     mesh->setSlices(100);

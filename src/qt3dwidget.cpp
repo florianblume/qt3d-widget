@@ -1,6 +1,7 @@
 ﻿#include "qt3dwidget.h"
 #include "qt3dwidget_p.h"
 
+#include <QtGlobal>
 #include <QDebug>
 #include <QThread>
 #include <QApplication>
@@ -135,13 +136,36 @@ void Qt3DWidget::resizeGL(int w, int h) {
 
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
+    d->m_elapsedTimer.start();
+    // Process the next frame in sync -> No idea if this causes problems at some point when
+    // the scene becomes too complex. But this is always an issue, also in games, etc.
+    // so maybe not a problem.
+    // I think sound and everything else is still executed in a job even though we made
+    // the renderer render on the main thread (we have to because otherwise it can't make
+    // the context current which resides in another thread - the main thread together
+    // with the QOpenGLWidget).
+    // We could probably move the context to the thread of the renderer when setting
+    // mode Threadded on the QRenderAspect but there is on way to access it - it's
+    // private in the renderer and we would have to subclass it and everything would
+    // become pretty complicated.
     d->m_aspectEngine->processFrame();
 
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
+    // We probably don't need shouldRender because we definitely called processFrame right before
+    // but just to be save.
     if (renderer->shouldRender())
         renderer->doRender(true);
+
+    qint64 elapsed = d->m_elapsedTimer.elapsed();
+    if (d->m_maxElapsed == -1 || d->m_maxElapsed < elapsed) {
+        d->m_maxElapsed = elapsed;
+    }
+    if (d->m_minElapsed == -1 || d->m_minElapsed > elapsed) {
+        d->m_minElapsed = elapsed;
+    }
+    qDebug() << "Rendering took " << elapsed << " milliseconds (max: " << d->m_maxElapsed << ", min: " << d->m_minElapsed << ").";
 }
 
 void Qt3DWidget::registerAspect(Qt3DCore::QAbstractAspect *aspect) {
@@ -152,6 +176,12 @@ void Qt3DWidget::registerAspect(Qt3DCore::QAbstractAspect *aspect) {
 void Qt3DWidget::registerAspect(const QString &name) {
     Q_D(Qt3DWidget);
     d->m_aspectEngine->registerAspect(name);
+}
+
+void Qt3DWidget::setUpdateFrequency(int milliseconds) {
+    Q_D(Qt3DWidget);
+    Q_ASSERT_X(milliseconds > 0, "set update frequency", "Update frequency must be positive");
+    d->m_updateTimer.setInterval(milliseconds);
 }
 
 void Qt3DWidget::setRootEntity(Qt3DCore::QEntity *root) {

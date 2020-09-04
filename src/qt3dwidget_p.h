@@ -3,6 +3,7 @@
 
 #include "qt3dwidget.h"
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QScopedPointer>
 #include <QOpenGLContext>
@@ -69,6 +70,9 @@ public:
     Qt3DCore::QEntity *m_userRoot;
 
     QTimer m_updateTimer;
+    QElapsedTimer m_elapsedTimer;
+    int m_maxElapsed = -1;
+    int m_minElapsed = -1;
     int colorDirection = -1;
 
     bool m_initialized;
