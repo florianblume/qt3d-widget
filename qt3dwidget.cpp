@@ -35,6 +35,7 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     d->m_aspectEngine->setRunMode(Qt3DCore::QAspectEngine::Manual);
     d->m_aspectEngine->registerAspect(d->m_renderAspect);
     d->m_aspectEngine->registerAspect(d->m_inputAspect);
+    d->m_inputSettings->setEventSource(this);
     d->m_aspectEngine->registerAspect(d->m_logicAspect);
 
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
@@ -47,7 +48,6 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     d->m_forwardRenderer->setCamera(d->m_defaultCamera);
     d->m_forwardRenderer->setParent(d->m_renderSettings);
     d->m_renderSettings->setActiveFrameGraph(d->m_forwardRenderer);
-    d->m_inputSettings->setEventSource(this);
 
     d->m_activeFrameGraph = d->m_forwardRenderer;
     d->m_forwardRenderer->setClearColor("white");
@@ -55,13 +55,29 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
 
 Qt3DWidget::~Qt3DWidget() {
     Q_D(Qt3DWidget);
+    // Qt3D has a bug that when you set an externally managed QOpenGLContext it correctly detects this
+    // and registers on the contexts aboutToBeDestroyed() signal to clear graphics resources. This causes
+    // a segmentation fault because the QOpenGLWidget deletes the context which fires the signal but
+    // at this point, Qt3D has been deconstructed already and can't receive the signal anymore.
+    // Since the signal is connected to a lambda inside Qt3D, this connection is not removed when
+    // Qt3D is deconstructed.
+    context()->disconnect();
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
+    // Qt3D acquires a semaphore internally when shutting down. Since Qt3D is connected to the
+    // context's aboutToBeDestroyed() signal with a lambda which again clears the graphics resources
+    // which acquires the same semaphore, everything is deadlocked. That's why we have to set this
+    // null context here. Qt3D constructs a new context when passing a null pointer and everything
+    // is fine since it doesn't register for the signal in this case (only happens when we
+    // pass an existing context).
     renderer->setOpenGLContext(Q_NULLPTR);
+    // We need to call initialize after setting the context to drive Qt3D to set everything up.
+    // Only setting the context doesn't do anything.
     renderer->initialize();
     renderer->shutdown();
-    d->m_activeFrameGraph->setParent((Qt3DCore::QNode *) 0);
+    // This stops the simulation loop - we actually driver everything manually but update the
+    // engine using a timer and this prevents a crash.
     d->m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr());
     d->m_aspectEngine->unregisterAspect(d->m_renderAspect);
     delete d->m_renderAspect;
