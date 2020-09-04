@@ -4,6 +4,8 @@ An attempt at implementing a subclass of `QWidget` for Qt3D. The only options to
 
 ## Implementation
 
+**Needs at least Qt >= 5.14! Otherwise you can't run the `QAspectEngine` in manual mode. Automatic mode doesn't work because context sharing doesn't work and using the same context as the `QOpenGLWidget` doesn't work because the renderer can't make it current from another thread.**
+
 ### Former Implementation using additional OpenGL draw calls
 
 The first idea was to render Qt3D offscreen to a texture and then use the texture's ID in a `QOpenGLWidget`. This didnt' work unfortunately, the screen stayed black. Capturing Qt3D's content using `QRenderCapture` did work and using the resulting `QImage` for the texture in the OpenGL widget's `paintGL` function showed everything correctly. But this takes way too long and is an unnecessary path since it involves copying Qt3D's fbo content back to CPU. If at some point I manage to make sharing the texture between the two work, this would be the cleaner solution even though there would be an additional draw call to OpenGL in the `paintGL` function. Cleaner because in contrast to the current implementation Qt3D would be in charge of running the render loop etc. and we wouldn't have to use Qt3D internal classes.
