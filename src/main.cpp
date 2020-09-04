@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QPushButton>
 
 #include <Qt3DCore/QEntity>
 #include <Qt3DExtras/QTorusMesh>
@@ -19,6 +20,10 @@ int main(int argc, char *argv[]) {
     Qt3DWidget *widget = new Qt3DWidget();
     widget->show();
     w.setCentralWidget(widget);
+
+    QPushButton *button = new QPushButton(widget);
+    button->setGeometry(QRect(30, 30, 100, 100));
+    button->setText("Press me!");
 
     // Test scene
     Qt3DExtras::QTorusMesh *mesh = new Qt3DExtras::QTorusMesh();
