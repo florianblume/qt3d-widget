@@ -4,11 +4,13 @@
 #include <QApplication>
 #include <QDebug>
 #include <QPushButton>
+#include <QTimer>
 
 #include <Qt3DCore/QEntity>
 #include <Qt3DExtras/QTorusMesh>
 #include <Qt3DExtras/QPhongMaterial>
 #include <Qt3DExtras/QOrbitCameraController>
+#include <Qt3DCore/QTransform>
 
 int main(int argc, char *argv[]) {
     // We need this, otherwise the application hangs
@@ -37,6 +39,15 @@ int main(int argc, char *argv[]) {
     entity->addComponent(material);
     Qt3DExtras::QOrbitCameraController *cameraController = new Qt3DExtras::QOrbitCameraController(entity);
     cameraController->setCamera(widget->camera());
+    Qt3DCore::QTransform *transform = new Qt3DCore::QTransform(entity);
+    entity->addComponent(transform);
+    QTimer timer;
+    timer.setInterval(10);
+    QObject::connect(&timer, &QTimer::timeout, [transform](){
+        transform->setRotationX(transform->rotationX() + 1.f);
+        transform->setRotationY(transform->rotationY() + 1.f);
+    });
+    timer.start();
 
     widget->setRootEntity(entity);
     widget->camera()->viewAll();
