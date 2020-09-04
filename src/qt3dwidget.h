@@ -20,6 +20,7 @@ public:
     explicit Qt3DWidget(QWidget *parent = nullptr);
     ~Qt3DWidget();
     void initializeGL() override;
+    void resizeGL(int w, int h) override;
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
@@ -41,7 +42,6 @@ public Q_SLOTS:
 Q_SIGNALS:
 
 protected:
-    void showEvent(QShowEvent *e) override;
     Qt3DWidgetPrivate *d_ptr;
 
 private:

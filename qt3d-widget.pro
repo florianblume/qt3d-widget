@@ -15,22 +15,21 @@ DEFINES += QT_DEPRECATED_WARNINGS QT_NO_USING_NAMESPACE QT_NO_FOREACH
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    qt3dwidget.cpp
+    src/main.cpp \
+    src/mainwindow.cpp \
+    src/qt3dwidget.cpp
 
 HEADERS += \
-    mainwindow.h \
-    qt3dwidget.h \
-    qt3dwidget_p.h
+    src/mainwindow.h \
+    src/qt3dwidget.h \
+    src/qt3dwidget_p.h
 
 FORMS += \
-    mainwindow.ui
+    src/mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RESOURCES += \
-    resources.qrc
+RESOURCES +=

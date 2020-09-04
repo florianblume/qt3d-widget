@@ -41,6 +41,8 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
+    // If we don't set the context here already we only get half (???) of the image
+    // But we have to set it again in initializeGL otherwise we won't see anything
     renderer->setOpenGLContext(context());
     renderer->initialize();
 
@@ -94,6 +96,7 @@ void Qt3DWidget::initializeGL() {
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
+    // If we don't set the context here again we obtain a black image only
     renderer->setOpenGLContext(context());
     renderer->initialize();
 
@@ -123,6 +126,11 @@ void Qt3DWidget::initializeGL() {
         update();
     });
     d->m_updateTimer.start();
+}
+
+void Qt3DWidget::resizeGL(int w, int h) {
+    Q_D(Qt3DWidget);
+    d->m_defaultCamera->setAspectRatio(w / (float) h);
 }
 
 void Qt3DWidget::paintGL() {
@@ -186,8 +194,4 @@ Qt3DRender::QRenderSettings *Qt3DWidget::renderSettings() const {
 
 QSurface *Qt3DWidget::surface() const {
     return context()->surface();
-}
-
-void Qt3DWidget::showEvent(QShowEvent *e) {
-    QWidget::showEvent(e);
 }
