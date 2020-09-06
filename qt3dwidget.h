@@ -3,7 +3,6 @@
 
 #include <Qt3DRender/qt3drender_global.h>
 
-#include <QMainWindow>
 #include <QOpenGLWidget>
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QAbstractAspect>
@@ -18,9 +17,10 @@ class Qt3DWidget : public QOpenGLWidget {
     Q_OBJECT
 
 public:
-    explicit Qt3DWidget(QMainWindow *window, QWidget *parent = nullptr);
+    explicit Qt3DWidget(QWidget *parent = nullptr);
     ~Qt3DWidget();
     void initializeGL() override;
+    void resizeGL(int w, int h) override;
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);

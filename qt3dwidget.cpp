@@ -27,7 +27,7 @@ Qt3DWidgetPrivate::Qt3DWidgetPrivate()
     , m_renderSurfaceSelector(new Qt3DRender::QRenderSurfaceSelector)
     , m_renderTarget(new Qt3DRender::QRenderTarget)
     , m_colorOutput(new Qt3DRender::QRenderTargetOutput)
-    , m_colorTexture(new Qt3DRender::QTexture2D)
+    , m_colorTexture(new Qt3DRender::QSharedGLTexture)
     , m_depthOutput(new Qt3DRender::QRenderTargetOutput)
     , m_depthTexture(new Qt3DRender::QTexture2D)
     , m_initialized(false) {
@@ -83,9 +83,14 @@ void Qt3DWidgetPrivate::init() {
     m_shaderProgram->bind();
     m_shaderProgram->setUniformValue("texture", 0);
     m_shaderProgram->release();
+
+    m_texture = new QOpenGLTexture(QOpenGLTexture::Target2D);
+    m_texture->setSize(100, 100);
+    m_texture->create();
+    m_colorTexture->setTextureId(m_texture->textureId());
 }
 
-Qt3DWidget::Qt3DWidget(QMainWindow *window, QWidget *parent)
+Qt3DWidget::Qt3DWidget(QWidget *parent)
     : QOpenGLWidget(parent)
     , d_ptr(new Qt3DWidgetPrivate) {
     Q_D(Qt3DWidget);
@@ -135,7 +140,7 @@ Qt3DWidget::Qt3DWidget(QMainWindow *window, QWidget *parent)
     d->m_forwardRenderer->setSurface(d->m_offscreenSurface);
     d->m_forwardRenderer->setParent(d->m_renderSurfaceSelector);
     d->m_renderSettings->setActiveFrameGraph(d->m_renderTargetSelector);
-    d->m_inputSettings->setEventSource(window);
+    d->m_inputSettings->setEventSource(this);
     d->m_renderCapture->setParent(d->m_forwardRenderer);
 
     d->m_activeFrameGraph = d->m_forwardRenderer;
@@ -153,6 +158,8 @@ Qt3DWidget::~Qt3DWidget() {
 
 void Qt3DWidget::imageCaptured() {
     Q_D(Qt3DWidget);
+    /*
+    qDebug() << d->m_colorTexture->textureImages();
     makeCurrent();
     QImage image = d->m_renderCaptureReply->image();
     if (d->m_texture) {
@@ -163,12 +170,37 @@ void Qt3DWidget::imageCaptured() {
     } else {
         d->m_texture = new QOpenGLTexture(image);
     }
+
     doneCurrent();
     update();
     delete d->m_renderCaptureReply;
     d->m_renderCaptureReply = d->m_renderCapture->requestCapture();
     connect(d->m_renderCaptureReply, &Qt3DRender::QRenderCaptureReply::completed,
             this, &Qt3DWidget::imageCaptured);
+            */
+}
+
+void Qt3DWidget::initializeGL() {
+    Q_D(Qt3DWidget);
+    d->init();
+
+    Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
+                    (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
+    Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
+
+    //qDebug() << "qt3d share context" << renderer->shareContext();
+    //qDebug() << "this share context" << context()->shareContext();
+    //qDebug() << context()->shareGroup();
+}
+
+void Qt3DWidget::resizeGL(int w, int h) {
+    Q_D(Qt3DWidget);
+    QSize size(w, h);
+    d->m_texture->setSize(w, h);
+    d->m_renderSurfaceSelector->setExternalRenderTargetSize(size);
+    d->m_colorTexture->setSize(size.width(), size.height());
+    d->m_depthTexture->setSize(size.width(), size.height());
+    d->m_defaultCamera->setAspectRatio(size.width() / (float) size.height());
 }
 
 void Qt3DWidget::paintGL() {
@@ -202,11 +234,6 @@ void Qt3DWidget::paintGL() {
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     d->m_shaderProgram->release();
-}
-
-void Qt3DWidget::initializeGL() {
-    Q_D(Qt3DWidget);
-    d->init();
 }
 
 void Qt3DWidget::registerAspect(Qt3DCore::QAbstractAspect *aspect) {
@@ -278,10 +305,12 @@ void Qt3DWidget::showEvent(QShowEvent *e) {
 
 void Qt3DWidget::resizeEvent(QResizeEvent *e) {
     Q_D(Qt3DWidget);
+    /*
     QSize size = e->size();
     d->m_renderSurfaceSelector->setExternalRenderTargetSize(size);
     d->m_colorTexture->setSize(size.width(), size.height());
     d->m_depthTexture->setSize(size.width(), size.height());
     d->m_defaultCamera->setAspectRatio(size.width() / (float) size.height());
+    */
     QOpenGLWidget::resizeEvent(e);
 }

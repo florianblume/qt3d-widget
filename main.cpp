@@ -10,11 +10,13 @@
 #include <Qt3DExtras/QOrbitCameraController>
 
 int main(int argc, char *argv[]) {
+    QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    Qt3DWidget *widget = new Qt3DWidget(&w);
-    w.setCentralWidget(widget);
+    //MainWindow w;
+    //w.show();
+    Qt3DWidget *widget = new Qt3DWidget();
+    widget->show();
+    //w.setCentralWidget(widget);
 
     Qt3DExtras::QSphereMesh *mesh = new Qt3DExtras::QSphereMesh();
     mesh->setRings(100);

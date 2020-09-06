@@ -73,7 +73,7 @@ public:
     Qt3DRender::QRenderSurfaceSelector *m_renderSurfaceSelector;
     Qt3DRender::QRenderTarget *m_renderTarget;
     Qt3DRender::QRenderTargetOutput *m_colorOutput;
-    Qt3DRender::QTexture2D *m_colorTexture;
+    Qt3DRender::QSharedGLTexture *m_colorTexture;
     Qt3DRender::QRenderTargetOutput *m_depthOutput;
     Qt3DRender::QTexture2D *m_depthTexture;
 
