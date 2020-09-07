@@ -85,8 +85,11 @@ void Qt3DWidgetPrivate::init() {
     m_shaderProgram->release();
 
     m_texture = new QOpenGLTexture(QOpenGLTexture::Target2D);
+    m_texture->setFormat(QOpenGLTexture::RGBA32F);
     m_texture->setSize(100, 100);
+    m_texture->allocateStorage();
     m_texture->create();
+    //m_texture = new QOpenGLTexture(QImage("test.png"));
     m_colorTexture->setTextureId(m_texture->textureId());
 }
 
@@ -141,7 +144,7 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     d->m_forwardRenderer->setParent(d->m_renderSurfaceSelector);
     d->m_renderSettings->setActiveFrameGraph(d->m_renderTargetSelector);
     d->m_inputSettings->setEventSource(this);
-    d->m_renderCapture->setParent(d->m_forwardRenderer);
+    //d->m_renderCapture->setParent(d->m_forwardRenderer);
 
     d->m_activeFrameGraph = d->m_forwardRenderer;
     d->m_forwardRenderer->setClearColor("white");
@@ -188,15 +191,27 @@ void Qt3DWidget::initializeGL() {
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
 
-    //qDebug() << "qt3d share context" << renderer->shareContext();
-    //qDebug() << "this share context" << context()->shareContext();
-    //qDebug() << context()->shareGroup();
+    qDebug() << "qt3d share context" << renderer->shareContext() << endl;
+    qDebug() << "this share context" << context()->shareContext() << endl;
+    qDebug() << "this context" << context() << endl;
+    qDebug() << "context groupd of gl widget" << context()->shareGroup() << endl;
 }
 
 void Qt3DWidget::resizeGL(int w, int h) {
     Q_D(Qt3DWidget);
     QSize size(w, h);
-    d->m_texture->setSize(w, h);
+    QOpenGLTexture *newTexture = new QOpenGLTexture(QOpenGLTexture::Target2D);
+
+    newTexture->setFormat(QOpenGLTexture::RGBA32F);
+    newTexture->setSize(w, h);
+    newTexture->allocateStorage();
+    newTexture->create();
+    d->m_colorTexture->setTextureId(newTexture->textureId());
+
+    d->m_texture->destroy();
+    delete d->m_texture;
+    d->m_texture = newTexture;
+
     d->m_renderSurfaceSelector->setExternalRenderTargetSize(size);
     d->m_colorTexture->setSize(size.width(), size.height());
     d->m_depthTexture->setSize(size.width(), size.height());
@@ -213,7 +228,9 @@ void Qt3DWidget::paintGL() {
     QOpenGLContext *sharedContext = renderer->shareContext();
     sharedContext->makeCurrent(d->m_offscreenSurface);
     */
+
     //qDebug() << "Paint GL";
+
 
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glDisable(GL_BLEND);
@@ -232,6 +249,7 @@ void Qt3DWidget::paintGL() {
         if (d->m_texture)
             d->m_texture->bind();
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        d->m_texture->release();
     }
     d->m_shaderProgram->release();
 }
