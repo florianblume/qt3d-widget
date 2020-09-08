@@ -6,10 +6,7 @@
 #include <QThread>
 #include <QApplication>
 
-#include <QSurfaceFormat>
-#include <QOpenGLTexture>
-#include <QOpenGLFunctions>
-#include <QOpenGLFramebufferObject>
+#include <QOffscreenSurface>
 #include <Qt3DRender/private/qrenderaspect_p.h>
 #include <Qt3DRender/private/abstractrenderer_p.h>
 
@@ -22,7 +19,6 @@ Qt3DWidgetPrivate::Qt3DWidgetPrivate()
     , m_forwardRenderer(new Qt3DExtras::QForwardRenderer)
     , m_defaultCamera(new Qt3DRender::QCamera)
     , m_inputSettings(new Qt3DInput::QInputSettings)
-    , m_frameAction(new Qt3DLogic::QFrameAction)
     , m_root(new Qt3DCore::QEntity)
     , m_userRoot(nullptr)
     , m_initialized(false) {
@@ -65,6 +61,8 @@ Qt3DWidget::~Qt3DWidget() {
     // Since the signal is connected to a lambda inside Qt3D, this connection is not removed when
     // Qt3D is deconstructed.
     context()->disconnect();
+    d->m_updateTimer.stop();
+    d->m_updateTimer.disconnect();
     Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
                     (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
     Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
@@ -103,28 +101,13 @@ void Qt3DWidget::initializeGL() {
 
     d->m_root->addComponent(d->m_renderSettings);
     d->m_root->addComponent(d->m_inputSettings);
-    d->m_root->addComponent(d->m_frameAction);
-    //connect(d->m_frameAction, &Qt3DLogic::QFrameAction::triggered,
-    //        this, &Qt3DWidget::paintGL);
     d->m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr(d->m_root));
 
     d->m_initialized = true;
 
-    d->m_updateTimer.setInterval(20); // 50 fps
-    connect(&d->m_updateTimer, &QTimer::timeout, this, &Qt3DWidget::paintGL);
-    connect(&d->m_updateTimer, &QTimer::timeout, [d, this](){
-        Qt3DExtras::QForwardRenderer * test = (Qt3DExtras::QForwardRenderer *) d->m_activeFrameGraph;
-        QColor color = test->clearColor();
-        int red = color.red() + d->colorDirection;
-        int green = color.green() + d->colorDirection;
-        int blue = color.blue() + d->colorDirection;
-        test->setClearColor(QColor(red, green, blue));
-        if (red == 0) {
-            d->colorDirection = 1;
-        } else if (red == 255) {
-            d->colorDirection = -1;
-        }
-        update();
+    d->m_updateTimer.setInterval(20); // 100 fps
+    connect(&d->m_updateTimer, &QTimer::timeout, [this](){
+        this->update();
     });
     d->m_updateTimer.start();
 }
@@ -136,7 +119,6 @@ void Qt3DWidget::resizeGL(int w, int h) {
 
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
-    d->m_elapsedTimer.start();
     // Process the next frame in sync -> No idea if this causes problems at some point when
     // the scene becomes too complex. But this is always an issue, also in games, etc.
     // so maybe not a problem.
@@ -157,15 +139,6 @@ void Qt3DWidget::paintGL() {
     // but just to be save.
     if (renderer->shouldRender())
         renderer->doRender(true);
-
-    qint64 elapsed = d->m_elapsedTimer.elapsed();
-    if (d->m_maxElapsed == -1 || d->m_maxElapsed < elapsed) {
-        d->m_maxElapsed = elapsed;
-    }
-    if (d->m_minElapsed == -1 || d->m_minElapsed > elapsed) {
-        d->m_minElapsed = elapsed;
-    }
-    qDebug() << "Rendering took " << elapsed << " milliseconds (max: " << d->m_maxElapsed << ", min: " << d->m_minElapsed << ").";
 }
 
 void Qt3DWidget::registerAspect(Qt3DCore::QAbstractAspect *aspect) {

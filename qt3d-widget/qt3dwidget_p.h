@@ -3,15 +3,8 @@
 
 #include "qt3dwidget.h"
 
-#include <QElapsedTimer>
 #include <QObject>
-#include <QScopedPointer>
 #include <QOpenGLContext>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLBuffer>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLTexture>
-#include <QResizeEvent>
 #include <QTimer>
 
 #include <Qt3DRender/private/qt3drender_global_p.h>
@@ -22,26 +15,12 @@
 #include <Qt3DRender/QRenderSettings>
 #include <Qt3DExtras/QForwardRenderer>
 #include <Qt3DRender/QCamera>
-#include <Qt3DRender/QRenderTargetSelector>
-#include <Qt3DRender/QRenderSurfaceSelector>
-#include <Qt3DRender/QRenderTargetOutput>
-#include <Qt3DRender/QRenderTarget>
-#include <Qt3DRender/QTexture>
 #include <Qt3DInput/QInputSettings>
-#include <Qt3DLogic/QFrameAction>
-#include <Qt3DRender/QRenderCapture>
-#include <Qt3DRender/QRenderCaptureReply>
-#include <Qt3DRender/QViewport>
-#include <Qt3DRender/QCameraSelector>
-#include <Qt3DRender/QClearBuffers>
-#include <QOffscreenSurface>
 #include <Qt3DRender/private/abstractrenderer_p.h>
 
 class Qt3DWidgetPrivate : public QObject
 {
 public:
-    typedef QScopedPointer<QOpenGLShaderProgram> ShaderProgramPtr;
-
     Qt3DWidgetPrivate();
 
     Qt3DCore::QAspectEngine *m_aspectEngine;
@@ -62,18 +41,11 @@ public:
     // Input configuration
     Qt3DInput::QInputSettings *m_inputSettings;
 
-    // To get notified when a frame is ready
-    Qt3DLogic::QFrameAction *m_frameAction;
-
     // Scene
     Qt3DCore::QEntity *m_root;
     Qt3DCore::QEntity *m_userRoot;
 
     QTimer m_updateTimer;
-    QElapsedTimer m_elapsedTimer;
-    int m_maxElapsed = -1;
-    int m_minElapsed = -1;
-    int colorDirection = -1;
 
     bool m_initialized;
 };

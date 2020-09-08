@@ -1,8 +1,10 @@
 #ifndef QT3DWIDGET_H
 #define QT3DWIDGET_H
 
+
 #include <Qt3DRender/qt3drender_global.h>
 
+#include <QtCore/QtGlobal>
 #include <QOpenGLWidget>
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QAbstractAspect>
@@ -11,9 +13,15 @@
 #include <Qt3DRender/QRenderSettings>
 #include <Qt3DRender/QCamera>
 
+#if defined(QT3DWIDGETLIB_LIBRARY)
+#  define QT3DWIDGETLIB_EXPORT Q_DECL_EXPORT
+#else
+#  define QT3DWIDGETLIB_EXPORT Q_DECL_IMPORT
+#endif
+
 class Qt3DWidgetPrivate;
 
-class Qt3DWidget : public QOpenGLWidget {
+class QT3DWIDGETLIB_EXPORT Qt3DWidget : public QOpenGLWidget {
     Q_OBJECT
 
 public:
