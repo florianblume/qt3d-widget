@@ -7,6 +7,11 @@ CONFIG += c++11 shared_and_static build_all
 
 DEFINES += QT3DWIDGETLIB_LIBRARY
 
+public_headers.path = include
+public_headers.files = include/*.h
+
+INSTALLS += public_headers
+
 DESTDIR += ../../../lib
 
 SOURCES += \
