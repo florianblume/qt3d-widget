@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QPushButton>
 #include <QTimer>
+#include <QSurfaceFormat>
 
 #include <Qt3DCore/QEntity>
 #include <Qt3DExtras/QTorusMesh>
@@ -13,6 +14,14 @@
 #include <Qt3DCore/QTransform>
 
 int main(int argc, char *argv[]) {
+    QSurfaceFormat format;
+    format.setVersion(4, 3);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setDepthBufferSize(24);
+    format.setSamples(8);
+    format.setStencilBufferSize(8);
+    QSurfaceFormat::setDefaultFormat(format);
+
     // We need this, otherwise the application hangs
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication a(argc, argv);
@@ -44,8 +53,8 @@ int main(int argc, char *argv[]) {
     QTimer timer;
     timer.setInterval(10);
     QObject::connect(&timer, &QTimer::timeout, [transform](){
-        transform->setRotationX(transform->rotationX() + 1.f);
-        transform->setRotationY(transform->rotationY() + 1.f);
+        //transform->setRotationX(transform->rotationX() + 1.f);
+        //transform->setRotationY(transform->rotationY() + 1.f);
     });
     timer.start();
 
