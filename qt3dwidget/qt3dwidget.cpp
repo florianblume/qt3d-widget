@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QThread>
 #include <QApplication>
+#include <QMutexLocker>
 
 #include <QOffscreenSurface>
 #include <Qt3DRender/private/qrenderaspect_p.h>
@@ -110,6 +111,8 @@ void Qt3DWidget::initializeGL() {
         this->update();
     });
     d->m_updateTimer.start();
+
+    this->initializeQt3D();
 }
 
 void Qt3DWidget::resizeGL(int w, int h) {
@@ -118,6 +121,7 @@ void Qt3DWidget::resizeGL(int w, int h) {
 }
 
 void Qt3DWidget::paintGL() {
+    QMutexLocker locker(&setFramegraphMutex);
     Q_D(Qt3DWidget);
     // Process the next frame in sync -> No idea if this causes problems at some point when
     // the scene becomes too complex. But this is always an issue, also in games, etc.
@@ -169,10 +173,11 @@ void Qt3DWidget::setRootEntity(Qt3DCore::QEntity *root) {
 }
 
 void Qt3DWidget::setActiveFrameGraph(Qt3DRender::QFrameGraphNode *activeFrameGraph) {
+    QMutexLocker locker(&setFramegraphMutex);
     Q_D(Qt3DWidget);
     d->m_activeFrameGraph->setParent(static_cast<Qt3DCore::QNode*>(nullptr));
     d->m_activeFrameGraph = activeFrameGraph;
-    d->m_activeFrameGraph->setParent(d->m_renderSettings);
+    d->m_renderSettings->setActiveFrameGraph(d->m_activeFrameGraph);
 }
 
 Qt3DRender::QFrameGraphNode *Qt3DWidget::activeFrameGraph() const {
@@ -197,4 +202,8 @@ Qt3DRender::QRenderSettings *Qt3DWidget::renderSettings() const {
 
 QSurface *Qt3DWidget::surface() const {
     return context()->surface();
+}
+
+void Qt3DWidget::initializeQt3D() {
+    // Nothing to do here
 }

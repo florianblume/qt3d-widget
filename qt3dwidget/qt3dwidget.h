@@ -4,6 +4,7 @@
 
 #include <Qt3DRender/qt3drender_global.h>
 
+#include <QMutex>
 #include <QtCore/QtGlobal>
 #include <QOpenGLWidget>
 #include <Qt3DCore/QEntity>
@@ -46,6 +47,11 @@ public:
 
     QSurface *surface() const;
 
+    // Method to override to initialize Qt3D like setting the root entity
+    // and the framegraph. This method is called after the widget has been
+    // initialized.
+    virtual void initializeQt3D();
+
 public Q_SLOTS:
     void paintGL() override;
 
@@ -56,6 +62,7 @@ protected:
 
 private:
     Q_DECLARE_PRIVATE(Qt3DWidget)
+    QMutex setFramegraphMutex;
 
 };
 
