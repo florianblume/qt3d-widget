@@ -13,4 +13,5 @@ An attempt at implementing a subclass of `QWidget` for Qt3D. The only options to
 
 With `QPushButton` inside to show that it's now possible to add widgets inside Qt3D.
 
+![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
 ![img](https://i.imgur.com/SG2hxT5.gif)
