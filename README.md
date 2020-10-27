@@ -2,6 +2,20 @@
 
 An attempt at implementing a subclass of `QWidget` for Qt3D. The only options to embedd Qt3D into an application with widgets is to use QML (which is not always feasible) or to use a `Qt3DWindow` and embedd it using `QWidget::createWindowContainer`. This unfortunatley draws the window's content over everything else, even neighboring widgets. This widget is supposed to be a native widget which is embeddable and usable like any other widget.
 
+## Usage
+
+You can either use the static library (`libqt3d-widget.a`) in your project, which will be compiled into the executable. Or you use the dynamic linked library (`libqt3d-widget.so`).
+
+**Note:**
+
+If you want to use the dynamic linked library specify
+
+    LIBS += -L../path/to/your/libs/folder/ -lqt3d-widget
+
+If you want to use the static library but keep the dynamic library in the same folder you must specify the full file name like so:
+
+    LIBS += ../path/to/your/libs/folder/libqt3d-widget.a
+
 ## Implementation
 
 **Update:** The implementation is now not using Qt3D internals anymore but renders to a texture which is then used by OpenGL. Should be compatible with many Qt3D versions.
