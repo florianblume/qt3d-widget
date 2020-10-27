@@ -151,37 +151,11 @@ Qt3DWidget::~Qt3DWidget() {
     delete d->m_aspectEngine;
 }
 
-void Qt3DWidget::imageCaptured() {
-    Q_D(Qt3DWidget);
-    makeCurrent();
-    QImage image = d->m_renderCaptureReply->image();
-    if (d->m_texture) {
-        d->m_texture->destroy();
-        d->m_texture->create();
-        d->m_texture->setSize(image.width(), image.height());
-        d->m_texture->setData(image);
-    } else {
-        d->m_texture = new QOpenGLTexture(image);
-    }
-    doneCurrent();
-    update();
-    delete d->m_renderCaptureReply;
-    d->m_renderCaptureReply = d->m_renderCapture->requestCapture();
-    connect(d->m_renderCaptureReply, &Qt3DRender::QRenderCaptureReply::completed,
-            this, &Qt3DWidget::imageCaptured);
-}
-
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
 
-    /*
-    Qt3DRender::QRenderAspectPrivate *dRenderAspect = static_cast<decltype(dRenderAspect)>
-                    (Qt3DRender::QRenderAspectPrivate::get(d->m_renderAspect));
-    Qt3DRender::Render::AbstractRenderer *renderer = dRenderAspect->m_renderer;
-    QOpenGLContext *sharedContext = renderer->shareContext();
-    sharedContext->makeCurrent(d->m_offscreenSurface);
-    */
-    //qDebug() << "Paint GL";
+    qDebug() << "Rendering took " << timer.elapsed() << " ms";
+    timer.start();
 
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glDisable(GL_BLEND);
@@ -196,9 +170,7 @@ void Qt3DWidget::paintGL() {
         QOpenGLVertexArrayObject::Binder vaoBinder(&d->m_vao);
 
         d->m_shaderProgram->setUniformValue("matrix", m);
-        //glBindTexture(GL_TEXTURE_2D, d->m_colorTexture->handle().toUInt());
-        if (d->m_texture)
-            d->m_texture->bind();
+        glBindTexture(GL_TEXTURE_2D, d->m_colorTexture->handle().toUInt());
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     d->m_shaderProgram->release();
@@ -207,6 +179,14 @@ void Qt3DWidget::paintGL() {
 void Qt3DWidget::initializeGL() {
     Q_D(Qt3DWidget);
     d->init();
+}
+
+void Qt3DWidget::resizeGL(int w, int h) {
+    Q_D(Qt3DWidget);
+    d->m_defaultCamera->setAspectRatio(w / (float) h);
+    d->m_colorTexture->setSize(w, h);
+    d->m_depthTexture->setSize(w, h);
+    d->m_renderSurfaceSelector->setExternalRenderTargetSize(QSize(w, h));
 }
 
 void Qt3DWidget::registerAspect(Qt3DCore::QAbstractAspect *aspect) {
@@ -228,10 +208,6 @@ void Qt3DWidget::setRootEntity(Qt3DCore::QEntity *root) {
             root->setParent(d->m_root);
         d->m_userRoot = root;
     }
-
-    d->m_renderCaptureReply = d->m_renderCapture->requestCapture();
-    connect(d->m_renderCaptureReply, &Qt3DRender::QRenderCaptureReply::completed,
-            this, &Qt3DWidget::imageCaptured);
 }
 
 void Qt3DWidget::setActiveFrameGraph(Qt3DRender::QFrameGraphNode *activeFrameGraph) {
@@ -268,20 +244,10 @@ void Qt3DWidget::showEvent(QShowEvent *e) {
         d->m_root->addComponent(d->m_inputSettings);
         d->m_root->addComponent(d->m_frameAction);
         connect(d->m_frameAction, &Qt3DLogic::QFrameAction::triggered,
-                this, &Qt3DWidget::paintGL);
+                [this](){this->update();});
         d->m_aspectEngine->setRootEntity(Qt3DCore::QEntityPtr(d->m_root));
 
         d->m_initialized = true;
     }
     QWidget::showEvent(e);
-}
-
-void Qt3DWidget::resizeEvent(QResizeEvent *e) {
-    Q_D(Qt3DWidget);
-    QSize size = e->size();
-    d->m_renderSurfaceSelector->setExternalRenderTargetSize(size);
-    d->m_colorTexture->setSize(size.width(), size.height());
-    d->m_depthTexture->setSize(size.width(), size.height());
-    d->m_defaultCamera->setAspectRatio(size.width() / (float) size.height());
-    QOpenGLWidget::resizeEvent(e);
 }

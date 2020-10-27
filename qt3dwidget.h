@@ -3,6 +3,8 @@
 
 #include <Qt3DRender/qt3drender_global.h>
 
+#include <QElapsedTimer>
+
 #include <QMainWindow>
 #include <QOpenGLWidget>
 #include <Qt3DCore/QEntity>
@@ -21,6 +23,7 @@ public:
     explicit Qt3DWidget(QMainWindow *window, QWidget *parent = nullptr);
     ~Qt3DWidget();
     void initializeGL() override;
+    void resizeGL(int w, int h) override;
 
     void registerAspect(Qt3DCore::QAbstractAspect *aspect);
     void registerAspect(const QString &name);
@@ -41,14 +44,12 @@ Q_SIGNALS:
 
 protected:
     void showEvent(QShowEvent *e) override;
-    void resizeEvent(QResizeEvent *e) override;
     Qt3DWidgetPrivate *d_ptr;
 
 private:
     Q_DECLARE_PRIVATE(Qt3DWidget)
 
-private Q_SLOTS:
-    void imageCaptured();
+    QElapsedTimer timer;
 
 };
 

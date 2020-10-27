@@ -55,7 +55,6 @@ public:
     Qt3DRender::QCamera *m_defaultCamera;
     Qt3DRender::QFrameGraphNode *m_activeFrameGraph;
     Qt3DRender::QRenderCapture *m_renderCapture;
-    Qt3DRender::QRenderCaptureReply *m_renderCaptureReply;
 
     // Input configuration
     Qt3DInput::QInputSettings *m_inputSettings;
