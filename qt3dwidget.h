@@ -20,7 +20,7 @@ class Qt3DWidget : public QOpenGLWidget {
     Q_OBJECT
 
 public:
-    explicit Qt3DWidget(QMainWindow *window, QWidget *parent = nullptr);
+    explicit Qt3DWidget(QWidget *parent = nullptr);
     ~Qt3DWidget();
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -44,6 +44,7 @@ Q_SIGNALS:
 
 protected:
     void showEvent(QShowEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
     Qt3DWidgetPrivate *d_ptr;
 
 private:

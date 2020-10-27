@@ -12,7 +12,6 @@
 #include <QOpenGLTexture>
 #include <QResizeEvent>
 
-#include <Qt3DRender/private/qt3drender_global_p.h>
 #include <Qt3DCore/QAspectEngine>
 #include <Qt3DRender/QRenderAspect>
 #include <Qt3DInput/QInputAspect>
@@ -54,7 +53,6 @@ public:
     Qt3DExtras::QForwardRenderer *m_forwardRenderer;
     Qt3DRender::QCamera *m_defaultCamera;
     Qt3DRender::QFrameGraphNode *m_activeFrameGraph;
-    Qt3DRender::QRenderCapture *m_renderCapture;
 
     // Input configuration
     Qt3DInput::QInputSettings *m_inputSettings;
@@ -84,8 +82,6 @@ public:
     QOpenGLTexture *m_texture = Q_NULLPTR;
     int m_vertexAttributeLoc = 0;
     int m_texCoordAttributeLoc = 0;
-
-    QImage renderedImage;
 
     bool m_initialized;
 };

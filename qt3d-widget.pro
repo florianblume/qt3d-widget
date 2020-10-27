@@ -1,4 +1,4 @@
-QT       += core gui widgets 3dcore 3drender-private 3drender 3dextras 3dinput 3dlogic
+QT       += core gui widgets 3dcore 3drender 3dextras 3dinput 3dlogic
 
 CONFIG += c++11
 
@@ -31,5 +31,4 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RESOURCES += \
-    resources.qrc
+RESOURCES +=

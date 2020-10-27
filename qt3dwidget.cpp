@@ -6,8 +6,6 @@
 #include <QSurfaceFormat>
 #include <QOpenGLTexture>
 #include <QOpenGLFunctions>
-#include <Qt3DRender/private/qrenderaspect_p.h>
-#include <Qt3DRender/private/abstractrenderer_p.h>
 
 Qt3DWidgetPrivate::Qt3DWidgetPrivate()
     : m_aspectEngine(new Qt3DCore::QAspectEngine)
@@ -17,7 +15,6 @@ Qt3DWidgetPrivate::Qt3DWidgetPrivate()
     , m_renderSettings(new Qt3DRender::QRenderSettings)
     , m_forwardRenderer(new Qt3DExtras::QForwardRenderer)
     , m_defaultCamera(new Qt3DRender::QCamera)
-    , m_renderCapture(new Qt3DRender::QRenderCapture)
     , m_inputSettings(new Qt3DInput::QInputSettings)
     , m_frameAction(new Qt3DLogic::QFrameAction)
     , m_root(new Qt3DCore::QEntity)
@@ -72,10 +69,29 @@ void Qt3DWidgetPrivate::init() {
     m_vbo.release();
 
     m_shaderProgram.reset(new QOpenGLShaderProgram);
-    m_shaderProgram->addShaderFromSourceFile(
-                QOpenGLShader::Vertex, ":/shader.vert");
-    m_shaderProgram->addShaderFromSourceFile(
-                QOpenGLShader::Fragment, ":/shader.frag");
+    m_shaderProgram->addShaderFromSourceCode(
+                QOpenGLShader::Vertex,
+                "#version 130\n"
+                "in highp vec4 vertex;\n"
+                "in mediump vec4 texCoord;\n"
+                "out mediump vec4 texc;\n"
+                "uniform mediump mat4 matrix;\n"
+                "void main(void)\n"
+                "{\n"
+                "        gl_Position = matrix * vertex;\n"
+                "        texc = texCoord;\n"
+                "}\n"
+    );
+    m_shaderProgram->addShaderFromSourceCode(
+                QOpenGLShader::Fragment,
+                "#version 130\n"
+                "uniform sampler2D texture;\n"
+                "in mediump vec4 texc;\n"
+                "void main(void)\n"
+                "{\n"
+                "        gl_FragColor = texture2D(texture, texc.st);\n"
+                "}\n"
+    );
     m_shaderProgram->bindAttributeLocation("vertex", m_vertexAttributeLoc);
     m_shaderProgram->bindAttributeLocation("texCoord", m_vertexAttributeLoc);
     m_shaderProgram->link();
@@ -85,7 +101,7 @@ void Qt3DWidgetPrivate::init() {
     m_shaderProgram->release();
 }
 
-Qt3DWidget::Qt3DWidget(QMainWindow *window, QWidget *parent)
+Qt3DWidget::Qt3DWidget(QWidget *parent)
     : QOpenGLWidget(parent)
     , d_ptr(new Qt3DWidgetPrivate) {
     Q_D(Qt3DWidget);
@@ -135,8 +151,7 @@ Qt3DWidget::Qt3DWidget(QMainWindow *window, QWidget *parent)
     d->m_forwardRenderer->setSurface(d->m_offscreenSurface);
     d->m_forwardRenderer->setParent(d->m_renderSurfaceSelector);
     d->m_renderSettings->setActiveFrameGraph(d->m_renderTargetSelector);
-    d->m_inputSettings->setEventSource(window);
-    d->m_renderCapture->setParent(d->m_forwardRenderer);
+    d->m_inputSettings->setEventSource(this);
 
     d->m_activeFrameGraph = d->m_forwardRenderer;
     d->m_forwardRenderer->setClearColor("white");
@@ -154,8 +169,10 @@ Qt3DWidget::~Qt3DWidget() {
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
 
-    qDebug() << "Rendering took " << timer.elapsed() << " ms";
-    timer.start();
+    #ifdef QT_DEBUG
+        qDebug() << "Rendering took " << timer.elapsed() << " ms";
+        timer.start();
+    #endif
 
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glDisable(GL_BLEND);
@@ -214,7 +231,7 @@ void Qt3DWidget::setActiveFrameGraph(Qt3DRender::QFrameGraphNode *activeFrameGra
     Q_D(Qt3DWidget);
     d->m_activeFrameGraph->setParent(static_cast<Qt3DCore::QNode*>(nullptr));
     d->m_activeFrameGraph = activeFrameGraph;
-    d->m_activeFrameGraph->setParent(d->m_renderSurfaceSelector);
+    d->m_renderSettings->setActiveFrameGraph(activeFrameGraph);
 }
 
 Qt3DRender::QFrameGraphNode *Qt3DWidget::activeFrameGraph() const {
@@ -250,4 +267,15 @@ void Qt3DWidget::showEvent(QShowEvent *e) {
         d->m_initialized = true;
     }
     QWidget::showEvent(e);
+}
+
+void Qt3DWidget::resizeEvent(QResizeEvent *e) {
+    int w = e->size().width();
+    int h = e->size().height();
+    Q_D(Qt3DWidget);
+    d->m_defaultCamera->setAspectRatio(0.5);
+    d->m_colorTexture->setSize(w, h);
+    d->m_depthTexture->setSize(w, h);
+    d->m_renderSurfaceSelector->setExternalRenderTargetSize(QSize(w, h));
+    QOpenGLWidget::resizeEvent(e);
 }
