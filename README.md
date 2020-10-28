@@ -4,6 +4,12 @@ An attempt at implementing a subclass of `QWidget` for Qt3D. The only options to
 
 ## Usage
 
+**IMPORTANT**: You need to add
+
+    QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+    
+to the `main` of your project *BEFORE* calling `QApplication(x, y)` or in whatever way you construct your application.
+
 You can either use the static library (`libqt3d-widget.a`) in your project, which will be compiled into the executable. Or you use the dynamic linked library (`libqt3d-widget.so`).
 
 **Note:**
