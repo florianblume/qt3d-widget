@@ -1,10 +1,6 @@
 #ifndef QT3DWIDGET_H
 #define QT3DWIDGET_H
 
-#include <Qt3DRender/qt3drender_global.h>
-
-#include <QElapsedTimer>
-
 #include <QMainWindow>
 #include <QOpenGLWidget>
 #include <Qt3DCore/QEntity>
@@ -37,6 +33,8 @@ public:
     Qt3DRender::QCamera *camera() const;
     Qt3DRender::QRenderSettings *renderSettings() const;
 
+    virtual void initializeQt3D();
+
 public Q_SLOTS:
     void paintGL() override;
 
@@ -44,13 +42,10 @@ Q_SIGNALS:
 
 protected:
     void showEvent(QShowEvent *e) override;
-    void resizeEvent(QResizeEvent *e) override;
     Qt3DWidgetPrivate *d_ptr;
 
 private:
     Q_DECLARE_PRIVATE(Qt3DWidget)
-
-    QElapsedTimer timer;
 
 };
 

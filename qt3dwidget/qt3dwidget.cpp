@@ -169,11 +169,6 @@ Qt3DWidget::~Qt3DWidget() {
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
 
-    #ifdef QT_DEBUG
-        qDebug() << "Rendering took " << timer.elapsed() << " ms";
-        timer.start();
-    #endif
-
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glDisable(GL_BLEND);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,6 +191,7 @@ void Qt3DWidget::paintGL() {
 void Qt3DWidget::initializeGL() {
     Q_D(Qt3DWidget);
     d->init();
+    initializeQt3D();
 }
 
 void Qt3DWidget::resizeGL(int w, int h) {
@@ -231,7 +227,7 @@ void Qt3DWidget::setActiveFrameGraph(Qt3DRender::QFrameGraphNode *activeFrameGra
     Q_D(Qt3DWidget);
     d->m_activeFrameGraph->setParent(static_cast<Qt3DCore::QNode*>(nullptr));
     d->m_activeFrameGraph = activeFrameGraph;
-    d->m_renderSettings->setActiveFrameGraph(activeFrameGraph);
+    activeFrameGraph->setParent(d->m_renderSurfaceSelector);
 }
 
 Qt3DRender::QFrameGraphNode *Qt3DWidget::activeFrameGraph() const {
@@ -254,6 +250,10 @@ Qt3DRender::QRenderSettings *Qt3DWidget::renderSettings() const {
     return d->m_renderSettings;
 }
 
+void Qt3DWidget::initializeQt3D() {
+
+}
+
 void Qt3DWidget::showEvent(QShowEvent *e) {
     Q_D(Qt3DWidget);
     if (!d->m_initialized) {
@@ -267,15 +267,4 @@ void Qt3DWidget::showEvent(QShowEvent *e) {
         d->m_initialized = true;
     }
     QWidget::showEvent(e);
-}
-
-void Qt3DWidget::resizeEvent(QResizeEvent *e) {
-    int w = e->size().width();
-    int h = e->size().height();
-    Q_D(Qt3DWidget);
-    d->m_defaultCamera->setAspectRatio(0.5);
-    d->m_colorTexture->setSize(w, h);
-    d->m_depthTexture->setSize(w, h);
-    d->m_renderSurfaceSelector->setExternalRenderTargetSize(QSize(w, h));
-    QOpenGLWidget::resizeEvent(e);
 }

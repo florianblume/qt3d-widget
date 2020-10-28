@@ -11,6 +11,7 @@
 #include <Qt3DExtras/QTorusMesh>
 #include <Qt3DExtras/QPhongMaterial>
 #include <Qt3DExtras/QOrbitCameraController>
+#include <Qt3DExtras/QForwardRenderer>
 
 int main(int argc, char *argv[]) {
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
@@ -38,6 +39,11 @@ int main(int argc, char *argv[]) {
     entity->addComponent(transform);
     Qt3DExtras::QOrbitCameraController *cameraController = new Qt3DExtras::QOrbitCameraController(entity);
     cameraController->setCamera(widget->camera());
+
+    Qt3DExtras::QForwardRenderer *forwardRenderer = new Qt3DExtras::QForwardRenderer;
+    forwardRenderer->setCamera(widget->camera());
+    forwardRenderer->setClearColor(Qt::black);
+    widget->setActiveFrameGraph(forwardRenderer);
 
     QTimer animationTimer;
     animationTimer.setInterval(10);
