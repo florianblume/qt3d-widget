@@ -72,13 +72,13 @@ void Qt3DWidgetPrivate::init() {
     m_shaderProgram->addShaderFromSourceCode(
                 QOpenGLShader::Vertex,
                 "#version 130\n"
-                "in highp vec4 vertex;\n"
-                "in mediump vec4 texCoord;\n"
-                "out mediump vec4 texc;\n"
+                "in highp vec3 vertex;\n"
+                "in mediump vec2 texCoord;\n"
+                "out mediump vec2 texc;\n"
                 "uniform mediump mat4 matrix;\n"
                 "void main(void)\n"
                 "{\n"
-                "        gl_Position = matrix * vertex;\n"
+                "        gl_Position = matrix * vec4(vertex, 1.0);\n"
                 "        texc = texCoord;\n"
                 "}\n"
     );
@@ -86,10 +86,12 @@ void Qt3DWidgetPrivate::init() {
                 QOpenGLShader::Fragment,
                 "#version 130\n"
                 "uniform sampler2D texture;\n"
-                "in mediump vec4 texc;\n"
+                "in mediump vec2 texc;\n"
                 "void main(void)\n"
                 "{\n"
-                "        gl_FragColor = texture2D(texture, texc.st);\n"
+                         "vec2 finalCoord = texc;"
+                         "finalCoord.y = 1 - finalCoord.y;"
+                "        gl_FragColor = texture2D(texture, finalCoord.xy);\n"
                 "}\n"
     );
     m_shaderProgram->bindAttributeLocation("vertex", m_vertexAttributeLoc);
