@@ -108,6 +108,8 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     , d_ptr(new Qt3DWidgetPrivate) {
     Q_D(Qt3DWidget);
 
+    setMouseTracking(true);
+
     d->m_offscreenSurface->setFormat(QSurfaceFormat::defaultFormat());
     d->m_offscreenSurface->create();
 
