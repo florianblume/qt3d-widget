@@ -2,6 +2,12 @@
 
 An attempt at implementing a subclass of `QWidget` for Qt3D. The only options to embedd Qt3D into an application with widgets is to use QML (which is not always feasible) or to use a `Qt3DWindow` and embedd it using `QWidget::createWindowContainer`. This unfortunatley draws the window's content over everything else, even neighboring widgets. This widget is supposed to be a native widget which is embeddable and usable like any other widget.
 
+## Requirements
+
+* Qt >= 5.13
+
+Although it doesn't use any Qt3D internals anymore it needs `QAbstractTexutre`'s function `handle()` to get a handle to the OpenGL texture. This function is only available from Qt >= 5.13. Any suggestions how to avoid this dependency are welcome.
+
 ## Usage
 
 **IMPORTANT**: You need to add
