@@ -20,13 +20,16 @@ Qt3DWidgetPrivate::Qt3DWidgetPrivate()
     , m_root(new Qt3DCore::QEntity)
     , m_userRoot(nullptr)
     , m_offscreenSurface(new QOffscreenSurface)
+    , m_renderStateSet(new Qt3DRender::QRenderStateSet)
+    , m_depthTest(new Qt3DRender::QDepthTest)
+    , m_multisampleAntialiasing(new Qt3DRender::QMultiSampleAntiAliasing)
     , m_renderTargetSelector(new Qt3DRender::QRenderTargetSelector)
     , m_renderSurfaceSelector(new Qt3DRender::QRenderSurfaceSelector)
     , m_renderTarget(new Qt3DRender::QRenderTarget)
     , m_colorOutput(new Qt3DRender::QRenderTargetOutput)
-    , m_colorTexture(new Qt3DRender::QTexture2D)
+    , m_colorTexture(new Qt3DRender::QTexture2DMultisample)
     , m_depthOutput(new Qt3DRender::QRenderTargetOutput)
-    , m_depthTexture(new Qt3DRender::QTexture2D)
+    , m_depthTexture(new Qt3DRender::QTexture2DMultisample)
     , m_initialized(false) {
 }
 
@@ -71,7 +74,7 @@ void Qt3DWidgetPrivate::init() {
     m_shaderProgram.reset(new QOpenGLShaderProgram);
     m_shaderProgram->addShaderFromSourceCode(
                 QOpenGLShader::Vertex,
-                "#version 130\n"
+                "#version 150\n"
                 "in highp vec3 vertex;\n"
                 "in mediump vec2 texCoord;\n"
                 "out mediump vec2 texc;\n"
@@ -84,14 +87,18 @@ void Qt3DWidgetPrivate::init() {
     );
     m_shaderProgram->addShaderFromSourceCode(
                 QOpenGLShader::Fragment,
-                "#version 130\n"
-                "uniform sampler2D texture;\n"
+                "#version 150\n"
+                "uniform sampler2DMS texture;\n"
                 "in mediump vec2 texc;\n"
+                "uniform int samples;\n"
                 "void main(void)\n"
                 "{\n"
-                         "vec2 finalCoord = texc;"
-                         "finalCoord.y = 1 - finalCoord.y;"
-                "        gl_FragColor = texture2D(texture, finalCoord.xy);\n"
+                "   ivec2 tc = ivec2(floor(textureSize(texture) * texc));\n"
+                "   vec4 color = vec4(0.0);\n"
+                "   for(int i = 0; i < samples; i++) {\n"
+                "       color += texelFetch(texture, tc, i);\n"
+                "   }\n"
+                "   gl_FragColor = color / float(samples);\n"
                 "}\n"
     );
     m_shaderProgram->bindAttributeLocation("vertex", m_vertexAttributeLoc);
@@ -100,6 +107,7 @@ void Qt3DWidgetPrivate::init() {
 
     m_shaderProgram->bind();
     m_shaderProgram->setUniformValue("texture", 0);
+    m_shaderProgram->setUniformValue("samples", QSurfaceFormat::defaultFormat().samples());
     m_shaderProgram->release();
 }
 
@@ -109,6 +117,8 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     Q_D(Qt3DWidget);
 
     setMouseTracking(true);
+
+    int samples = QSurfaceFormat::defaultFormat().samples();
 
     d->m_offscreenSurface->setFormat(QSurfaceFormat::defaultFormat());
     d->m_offscreenSurface->create();
@@ -129,6 +139,7 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
 
     // Hook the texture up to our output, and the output up to this object.
     d->m_colorOutput->setTexture(d->m_colorTexture);
+    d->m_colorTexture->setSamples(samples);
     d->m_renderTarget->addOutput(d->m_colorOutput);
 
     // Setup depth
@@ -144,8 +155,13 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
 
     // Hook up the depth texture
     d->m_depthOutput->setTexture(d->m_depthTexture);
+    d->m_depthTexture->setSamples(samples);
     d->m_renderTarget->addOutput(d->m_depthOutput);
 
+    d->m_renderStateSet->addRenderState(d->m_multisampleAntialiasing);
+    d->m_renderStateSet->addRenderState(d->m_depthTest);
+    d->m_depthTest->setDepthFunction(Qt3DRender::QDepthTest::LessOrEqual);
+    d->m_renderTargetSelector->setParent(d->m_renderStateSet);
     d->m_renderTargetSelector->setTarget(d->m_renderTarget);
 
     d->m_renderSurfaceSelector->setSurface(d->m_offscreenSurface);
@@ -154,7 +170,7 @@ Qt3DWidget::Qt3DWidget(QWidget *parent)
     d->m_forwardRenderer->setCamera(d->m_defaultCamera);
     d->m_forwardRenderer->setSurface(d->m_offscreenSurface);
     d->m_forwardRenderer->setParent(d->m_renderSurfaceSelector);
-    d->m_renderSettings->setActiveFrameGraph(d->m_renderTargetSelector);
+    d->m_renderSettings->setActiveFrameGraph(d->m_renderStateSet);
     d->m_inputSettings->setEventSource(this);
 
     d->m_activeFrameGraph = d->m_forwardRenderer;
@@ -175,6 +191,7 @@ void Qt3DWidget::paintGL() {
 
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glDisable(GL_BLEND);
+    glEnable(GL_MULTISAMPLE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     d->m_shaderProgram->bind();
@@ -186,7 +203,7 @@ void Qt3DWidget::paintGL() {
         QOpenGLVertexArrayObject::Binder vaoBinder(&d->m_vao);
 
         d->m_shaderProgram->setUniformValue("matrix", m);
-        glBindTexture(GL_TEXTURE_2D, d->m_colorTexture->handle().toUInt());
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, d->m_colorTexture->handle().toUInt());
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     d->m_shaderProgram->release();

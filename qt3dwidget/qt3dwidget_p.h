@@ -29,8 +29,11 @@
 #include <Qt3DRender/QRenderCapture>
 #include <Qt3DRender/QRenderCaptureReply>
 #include <Qt3DRender/QViewport>
+#include <Qt3DRender/QDepthTest>
 #include <Qt3DRender/QCameraSelector>
 #include <Qt3DRender/QClearBuffers>
+#include <Qt3DRender/QRenderStateSet>
+#include <Qt3DRender/QMultiSampleAntiAliasing>
 #include <QOffscreenSurface>
 
 class Qt3DWidgetPrivate : public QObject
@@ -66,13 +69,16 @@ public:
 
     // Offscreen framegraph
     QOffscreenSurface *m_offscreenSurface;
+    Qt3DRender::QRenderStateSet *m_renderStateSet;
+    Qt3DRender::QDepthTest *m_depthTest;
+    Qt3DRender::QMultiSampleAntiAliasing *m_multisampleAntialiasing;
     Qt3DRender::QRenderTargetSelector *m_renderTargetSelector;
     Qt3DRender::QRenderSurfaceSelector *m_renderSurfaceSelector;
     Qt3DRender::QRenderTarget *m_renderTarget;
     Qt3DRender::QRenderTargetOutput *m_colorOutput;
-    Qt3DRender::QTexture2D *m_colorTexture;
+    Qt3DRender::QTexture2DMultisample *m_colorTexture;
     Qt3DRender::QRenderTargetOutput *m_depthOutput;
-    Qt3DRender::QTexture2D *m_depthTexture;
+    Qt3DRender::QTexture2DMultisample *m_depthTexture;
 
     // OpenGL setup
     ShaderProgramPtr m_shaderProgram;
