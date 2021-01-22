@@ -5,6 +5,7 @@ An attempt at implementing a subclass of `QWidget` for Qt3D. The only options to
 ## Requirements
 
 * Qt >= 5.13
+* OpenGL >= 3.0
 
 Although it doesn't use any Qt3D internals anymore it needs `QAbstractTexutre`'s function `handle()` to get a handle to the OpenGL texture. This function is only available from Qt >= 5.13. Any suggestions how to avoid this dependency are welcome.
 
@@ -12,9 +13,13 @@ Although it doesn't use any Qt3D internals anymore it needs `QAbstractTexutre`'s
 
 **IMPORTANT**: You need to add
 
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    format.setSamples(4);
+    format.setVersion(3, 0);
+    QSurfaceFormat::setDefaultFormat(format);
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     
-to the `main` of your project *BEFORE* calling `QApplication(x, y)` or in whatever way you construct your application.
+to the `main` of your project *BEFORE* calling `QApplication(x, y)` or in whatever way you construct your application. This enables context sharing (we need this because Qt3D shares its context wit the native `QOpenGLWidget`). I left setting the appropriate format to the user so that they can define the desired number of samples (1 for no multisampling, up to whatever floats your boat, Qt3DWidget will use as many samples as you supply) and set your preferred version (at least 3.0!).
 
 You can either use the static library (`libqt3d-widget.a`) in your project, which will be compiled into the executable. Or you use the dynamic linked library (`libqt3d-widget.so`).
 
