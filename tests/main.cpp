@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QPushButton>
 
+#include <QSurfaceFormat>
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QTransform>
 #include <Qt3DExtras/QTorusMesh>
@@ -14,6 +15,10 @@
 #include <Qt3DExtras/QForwardRenderer>
 
 int main(int argc, char *argv[]) {
+    QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    format.setSamples(4);
+    format.setVersion(3, 0);
+    QSurfaceFormat::setDefaultFormat(format);
     QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
     QApplication a(argc, argv);
     MainWindow w;
@@ -42,7 +47,7 @@ int main(int argc, char *argv[]) {
 
     Qt3DExtras::QForwardRenderer *forwardRenderer = new Qt3DExtras::QForwardRenderer;
     forwardRenderer->setCamera(widget->camera());
-    forwardRenderer->setClearColor(Qt::black);
+    forwardRenderer->setClearColor(Qt::gray);
     widget->setActiveFrameGraph(forwardRenderer);
 
     QTimer animationTimer;
