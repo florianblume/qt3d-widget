@@ -9,7 +9,11 @@
 
 Qt3DWidgetPrivate::Qt3DWidgetPrivate()
     : m_aspectEngine(new Qt3DCore::QAspectEngine)
+#if QT_VERSION < 0x060000
     , m_renderAspect(new Qt3DRender::QRenderAspect(Qt3DRender::QRenderAspect::Threaded))
+#else
+    , m_renderAspect(new Qt3DRender::QRenderAspect(Qt3DRender::QRenderAspect::Automatic))
+#endif
     , m_inputAspect(new Qt3DInput::QInputAspect)
     , m_logicAspect(new Qt3DLogic::QLogicAspect)
     , m_renderSettings(new Qt3DRender::QRenderSettings)
@@ -189,10 +193,12 @@ Qt3DWidget::~Qt3DWidget() {
 void Qt3DWidget::paintGL() {
     Q_D(Qt3DWidget);
 
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glDisable(GL_BLEND);
-    glEnable(GL_MULTISAMPLE);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+
+    f->glClearColor(1.0, 1.0, 1.0, 1.0);
+    f->glDisable(GL_BLEND);
+    f->glEnable(GL_MULTISAMPLE);
+    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     d->m_shaderProgram->bind();
     {
@@ -203,8 +209,8 @@ void Qt3DWidget::paintGL() {
         QOpenGLVertexArrayObject::Binder vaoBinder(&d->m_vao);
 
         d->m_shaderProgram->setUniformValue("matrix", m);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, d->m_colorTexture->handle().toUInt());
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        f->glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, d->m_colorTexture->handle().toUInt());
+        f->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     d->m_shaderProgram->release();
 }
